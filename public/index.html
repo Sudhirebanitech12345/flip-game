@@ -218,14 +218,6 @@
           transform: scale(1.05);
         }
 
-        .card.correct {
-          transform: rotateY(180deg);
-        }
-
-        .card.wrong {
-          transform: rotateY(180deg);
-        }
-
         @keyframes correctPulse {
           0%,
           100% {
@@ -233,19 +225,6 @@
           }
           50% {
             transform: scale(1.1);
-          }
-        }
-
-        @keyframes wrongShake {
-          0%,
-          100% {
-            transform: translateX(0);
-          }
-          25% {
-            transform: translateX(-10px);
-          }
-          75% {
-            transform: translateX(10px);
           }
         }
 
@@ -327,7 +306,7 @@
           .cards-grid {
             grid-template-columns: repeat(3, 1fr);
           }
-
+          
           .card {
             width: 150px;
             height: 150px;
@@ -338,17 +317,17 @@
           .cards-grid {
             grid-template-columns: repeat(2, 1fr);
           }
-
+          
           .game-info {
             flex-direction: column;
             align-items: center;
           }
-
+          
           .card {
             width: 140px;
             height: 140px;
           }
-
+          
           .fashion-item {
             font-size: 2em;
           }
@@ -358,21 +337,21 @@
           .cards-grid {
             grid-template-columns: repeat(2, 1fr);
           }
-
+          
           .card {
             width: 120px;
             height: 120px;
           }
-
+          
           .fashion-item {
             font-size: 1.8em;
           }
-
+          
           .controls {
             flex-direction: column;
             align-items: center;
           }
-
+          
           .btn {
             width: 100%;
           }
@@ -403,18 +382,19 @@
             Find and flip cards in sequence from 1 to 12 to reveal fashion items
             and special offers!<br />
             +10 points for each correct card!<br />
-            Wrong selection hides all cards!
+            Wrong selection hides all cards!<br />
+            Game ends after 3 minutes!
         </div>
 
         <div class="game-info">
             <div>Progress: <span id="progress">0/12</span></div>
             <div class="next-card">Next: <span id="nextCard">1</span></div>
             <div class="score">Score: <span id="score">0</span></div>
-            <div class="timer">Time: <span id="time">0</span>s</div>
+            <div class="timer">Time: <span id="time">3:00</span></div>
         </div>
 
         <div class="cards-container">
-            <div class="cards-grid" id="cardsGrid"></div>
+          <div class="cards-grid" id="cardsGrid"></div>
         </div>
 
         <div class="controls">
@@ -434,9 +414,11 @@
       currentSequence: 1,
       flippedCards: [],
       gameWon: false,
+      gameOver: false,
       score: 0,
       startTime: null,
       timerInterval: null,
+      gameDuration: 180, // 3 minutes in seconds
       sessionId: null,
       firstCardFound: false,
       tempFlipped: [],
@@ -481,7 +463,26 @@
       const elapsedSeconds = Math.floor(
         (Date.now() - gameState.startTime) / 1000
       );
-      document.getElementById("time").textContent = elapsedSeconds;
+      const remainingSeconds = Math.max(0, gameState.gameDuration - elapsedSeconds);
+      
+      const minutes = Math.floor(remainingSeconds / 60);
+      const seconds = remainingSeconds % 60;
+      document.getElementById("time").textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+      if (remainingSeconds <= 0 && !gameState.gameOver) {
+        endGame();
+      }
+    }
+
+    function endGame() {
+      gameState.gameOver = true;
+      clearInterval(gameState.timerInterval);
+      showStatus(`Time's up! Final Score: ${gameState.score}`, "error");
+      
+      // Disable card clicks
+      document.querySelectorAll('.card').forEach(card => {
+        card.style.pointerEvents = 'none';
+      });
     }
 
     function createCards() {
@@ -513,7 +514,7 @@
 
         // Add click handler for manual flipping
         cardElement.addEventListener("click", () => {
-          if (!gameState.flippedCards.includes(index)) {
+          if (!gameState.gameOver && !gameState.flippedCards.includes(index)) {
             socket.emit("flip-card", { index });
           }
         });
@@ -539,6 +540,8 @@
     }
 
     function showAllCards() {
+      if (gameState.gameOver) return;
+      
       const cards = document.querySelectorAll(".card");
       cards.forEach((card) => card.classList.add("flipped"));
 
@@ -609,7 +612,7 @@
     });
 
     socket.on("temp-flip", ({ index }) => {
-      if (!gameState.tempFlipped.includes(index)) {
+      if (!gameState.gameOver && !gameState.tempFlipped.includes(index)) {
         gameState.tempFlipped.push(index);
         const card = document.querySelector(`[data-index="${index}"]`);
         if (card) card.classList.add("flipped");
@@ -625,10 +628,12 @@
     });
 
     socket.on("wrong-card", () => {
+      if (gameState.gameOver) return;
+      
       // Show all cards briefly before unflipping
       const cards = document.querySelectorAll(".card");
       cards.forEach(card => card.classList.add("flipped"));
-
+      
       setTimeout(() => {
         cards.forEach(card => {
           if (!gameState.flippedCards.includes(parseInt(card.dataset.index))) {
@@ -636,7 +641,7 @@
           }
         });
       }, 1000);
-
+      
       showStatus("Wrong card! All cards will be hidden", "error");
     });
 
