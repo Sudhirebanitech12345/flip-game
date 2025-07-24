@@ -8,7 +8,8 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
+
 
 // Serve static files (index.html, mobile.html, etc.) from public folder
 app.use(express.static(path.join(__dirname, "public")));
