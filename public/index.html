@@ -306,7 +306,7 @@
           .cards-grid {
             grid-template-columns: repeat(3, 1fr);
           }
-          
+
           .card {
             width: 150px;
             height: 150px;
@@ -317,17 +317,17 @@
           .cards-grid {
             grid-template-columns: repeat(2, 1fr);
           }
-          
+
           .game-info {
             flex-direction: column;
             align-items: center;
           }
-          
+
           .card {
             width: 140px;
             height: 140px;
           }
-          
+
           .fashion-item {
             font-size: 2em;
           }
@@ -337,25 +337,93 @@
           .cards-grid {
             grid-template-columns: repeat(2, 1fr);
           }
-          
+
           .card {
             width: 120px;
             height: 120px;
           }
-          
+
           .fashion-item {
             font-size: 1.8em;
           }
-          
+
           .controls {
             flex-direction: column;
             align-items: center;
           }
-          
+
           .btn {
             width: 100%;
           }
         }
+
+         /* Add these new styles */
+        .celebration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            opacity: 0.8;
+        }
+
+        .winner-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            z-index: 1001;
+            box-shadow: 0 0 30px gold;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.1); }
+            100% { transform: translate(-50%, -50%) scale(1); }
+        }
+
+        .winner-message h2 {
+            font-size: 3em;
+            color: gold;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+        }
+
+        .winner-message p {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+
+        .close-message {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .close-message:hover {
+            transform: scale(1.1);
+        }
+
     </style>
 </head>
 <body>
@@ -394,11 +462,11 @@
         </div>
 
         <div class="cards-container">
-          <div class="cards-grid" id="cardsGrid"></div>
+            <div class="cards-grid" id="cardsGrid"></div>
         </div>
 
         <div class="controls">
-            <button class="btn" id="newGameBtn">New Game</button>
+            <!-- <button class="btn" id="newGameBtn">New Game</button> -->
             <button class="btn" id="peekBtn">Peek All</button>
         </div>
 
@@ -464,7 +532,7 @@
         (Date.now() - gameState.startTime) / 1000
       );
       const remainingSeconds = Math.max(0, gameState.gameDuration - elapsedSeconds);
-      
+
       const minutes = Math.floor(remainingSeconds / 60);
       const seconds = remainingSeconds % 60;
       document.getElementById("time").textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
@@ -474,11 +542,65 @@
       }
     }
 
+    // Add these new functions
+    function createConfetti() {
+        const colors = ['#f00', '#0f0', '#00f', '#ff0', '#f0f', '#0ff', '#fff'];
+        const celebration = document.createElement('div');
+        celebration.className = 'celebration';
+
+        for (let i = 0; i < 200; i++) {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti';
+            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            confetti.style.left = Math.random() * 100 + 'vw';
+            confetti.style.top = -10 + 'px';
+            confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+
+            const animationDuration = Math.random() * 3 + 2;
+            confetti.style.animation = `fall ${animationDuration}s linear forwards`;
+
+            celebration.appendChild(confetti);
+        }
+
+        document.body.appendChild(celebration);
+
+        // Add CSS animation for falling
+        const style = document.createElement('style');
+        style.innerHTML = `
+            @keyframes fall {
+                to {
+                    transform: translateY(100vh) rotate(${Math.random() * 360}deg);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    function showWinnerMessage(seconds, score) {
+        createConfetti();
+
+        const message = document.createElement('div');
+        message.className = 'winner-message';
+        message.innerHTML = `
+            <h2>🎉 Congratulations! 🎉</h2>
+            <p>You completed the game in ${seconds} seconds!</p>
+            <p>Your final score: ${score}</p>
+            <button class="close-message">Awesome!</button>
+        `;
+
+        document.body.appendChild(message);
+
+        message.querySelector('.close-message').addEventListener('click', () => {
+            document.querySelector('.celebration').remove();
+            message.remove();
+        });
+    }
+
     function endGame() {
       gameState.gameOver = true;
       clearInterval(gameState.timerInterval);
       showStatus(`Time's up! Final Score: ${gameState.score}`, "error");
-      
+
       // Disable card clicks
       document.querySelectorAll('.card').forEach(card => {
         card.style.pointerEvents = 'none';
@@ -541,7 +663,7 @@
 
     function showAllCards() {
       if (gameState.gameOver) return;
-      
+
       const cards = document.querySelectorAll(".card");
       cards.forEach((card) => card.classList.add("flipped"));
 
@@ -569,6 +691,7 @@
       generateQRCode(socket.id);
     });
 
+    // Modify the game-state event listener
     socket.on("game-state", (state) => {
       if (state.sessionId !== gameState.sessionId) {
         gameState.sessionId = state.sessionId;
@@ -593,7 +716,9 @@
       updateUI();
       createCards();
 
-      if (state.gameWon) {
+      if (state.gameWon && !gameState.gameWon) {
+        // Only trigger celebration if game was just won
+        gameState.gameWon = true;
         clearInterval(gameState.timerInterval);
         const elapsedSeconds = Math.floor(
           (Date.now() - gameState.startTime) / 1000
@@ -602,6 +727,7 @@
           `🎉 You won in ${elapsedSeconds} seconds! Final Score: ${gameState.score}`,
           "success"
         );
+        showWinnerMessage(elapsedSeconds, gameState.score);
       } else if (
         state.flippedCards.length === 0 &&
         state.currentSequence === 1 &&
@@ -629,11 +755,11 @@
 
     socket.on("wrong-card", () => {
       if (gameState.gameOver) return;
-      
+
       // Show all cards briefly before unflipping
       const cards = document.querySelectorAll(".card");
       cards.forEach(card => card.classList.add("flipped"));
-      
+
       setTimeout(() => {
         cards.forEach(card => {
           if (!gameState.flippedCards.includes(parseInt(card.dataset.index))) {
@@ -641,7 +767,7 @@
           }
         });
       }, 1000);
-      
+
       showStatus("Wrong card! All cards will be hidden", "error");
     });
 

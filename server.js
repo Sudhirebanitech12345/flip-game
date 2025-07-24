@@ -28,6 +28,9 @@ const fashionItems = [
   { number: 7, emoji: "🧥", offer: "Jacket: Winter Special" },
   { number: 8, emoji: "👗", offer: "Dress: New Arrival" },
   { number: 9, emoji: "🩳", offer: "Shorts: Summer Deal" },
+  { number: 10, emoji: "👠", offer: "Heels: Luxury Line" },
+  { number: 11, emoji: "🎒", offer: "Backpack: Student Discount" },
+  { number: 12, emoji: "🧦", offer: "Socks: 3 for 2" },
 ];
 
 // Utility to remove circular references before sending game state
