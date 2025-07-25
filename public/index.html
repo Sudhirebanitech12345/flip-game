@@ -418,7 +418,7 @@
         </div>
 
         <div class="controls">
-            <!-- <button class="btn" id="newGameBtn">New Game</button> -->
+            <button class="btn" id="newGameBtn">New Game</button>
             <button class="btn" id="peekBtn">Peek All</button>
         </div>
 
@@ -442,11 +442,16 @@
       tempFlipped: [],
     };
 
-    const socket = io("https://flip-game-4oy3.onrender.com");
+    
+    // Make sure this matches your server URL
+  const socket = io("https://flip-game-f54r.onrender.com", {
+    withCredentials: true
+  });
+
 
     // Generate QR code
     function generateQRCode(sessionId) {
-      const url = `https://flip-game-4oy3.onrender.com/mobile?session=${sessionId}`;
+      const url = `https://flip-game-f54r.onrender.com/mobile?session=${sessionId}`;
 
       QRCode.toCanvas(
         url,

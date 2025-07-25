@@ -219,10 +219,16 @@
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
+    // Change this line to use your Render.com URL
+    const socket = io("https://flip-game-f54r.onrender.com", {
+      withCredentials: true,
+      transports: ['websocket'] // Force WebSocket if possible
+    });
+  </script>
+  <script>
     const urlParams = new URLSearchParams(window.location.search);
     const sessionId = urlParams.get('session');
 
-    const socket = io();
 
     let gameState = {
       currentSequence: 1,

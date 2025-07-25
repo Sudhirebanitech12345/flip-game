@@ -3,15 +3,30 @@ const http = require("http");
 const socketIo = require("socket.io");
 const path = require("path");
 const { v4: uuidv4 } = require("uuid");
+const cors = require("cors");
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server);
+
+// Enable CORS middleware
+app.use(cors({
+  origin: ["http://192.168.1.130:3000", "https://flip-game-f54r.onrender.com"],
+  methods: ["GET", "POST"],
+  credentials: true
+}));
+
+// Initialize Socket.IO with CORS configuration
+const io = socketIo(server, {
+  cors: {
+    origin: ["http://192.168.1.130:3000", "https://flip-game-f54r.onrender.com"],
+    methods: ["GET", "POST"],
+    credentials: true
+  }
+});
 
 const PORT = process.env.PORT || 3000;
 
-
-// Serve static files (index.html, mobile.html, etc.) from public folder
+// Serve static files from public folder
 app.use(express.static(path.join(__dirname, "public")));
 
 // In-memory session storage
@@ -43,16 +58,18 @@ function getCleanGameState(game) {
     score: game.score,
     startTime: game.startTime,
     cards: game.cards,
+    firstCardFound: game.firstCardFound
   };
 }
 
 // Shuffle array function
 function shuffleArray(array) {
-  for (let i = array.length - 1; i > 0; i--) {
+  const newArray = [...array];
+  for (let i = newArray.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
   }
-  return array;
+  return newArray;
 }
 
 io.on("connection", (socket) => {
@@ -61,9 +78,7 @@ io.on("connection", (socket) => {
   // Host creates a new game
   socket.on("new-game", () => {
     const sessionId = uuidv4();
-
-    // Create and shuffle cards
-    const shuffledCards = shuffleArray([...fashionItems]);
+    const shuffledCards = shuffleArray(fashionItems);
 
     sessions[sessionId] = {
       sessionId,
@@ -73,7 +88,7 @@ io.on("connection", (socket) => {
       score: 0,
       startTime: Date.now(),
       cards: shuffledCards,
-      hostSocket: socket,
+      hostSocket: socket.id,
       mobileSocket: null,
       firstCardFound: false,
     };
@@ -81,8 +96,8 @@ io.on("connection", (socket) => {
     socket.sessionId = sessionId;
     socket.join(sessionId);
 
-    // Send clean state back to host
     socket.emit("game-state", getCleanGameState(sessions[sessionId]));
+    console.log(`New game session created: ${sessionId}`);
   });
 
   // Mobile joins with a session
@@ -90,18 +105,17 @@ io.on("connection", (socket) => {
     const game = sessions[sessionId];
     if (!game) {
       socket.emit("session-not-found");
+      console.log(`Session not found: ${sessionId}`);
       return;
     }
 
-    game.mobileSocket = socket;
+    game.mobileSocket = socket.id;
     socket.sessionId = sessionId;
     socket.join(sessionId);
 
-    // Notify both parties
     io.to(sessionId).emit("mobile-connected");
-
-    // Send game state to mobile
     socket.emit("game-state", getCleanGameState(game));
+    console.log(`Mobile client connected to session: ${sessionId}`);
   });
 
   socket.on("flip-card", ({ index, sessionId }) => {
@@ -111,29 +125,22 @@ io.on("connection", (socket) => {
     const cardNumber = game.cards[index].number;
 
     if (!game.firstCardFound) {
-      // Before first card is found
       if (cardNumber === 1) {
-        // Correct first card found
         game.firstCardFound = true;
         game.flippedCards.push(index);
         game.currentSequence = 2;
         game.score += 10;
         io.to(sessionId).emit("game-state", getCleanGameState(game));
       } else {
-        // Wrong card - schedule unflip after 2 seconds
-        const tempFlipped = [...game.flippedCards, index];
-        io.to(sessionId).emit("temp-flip", { index, sessionId });
-
+        socket.emit("temp-flip", { index });
         setTimeout(() => {
           if (sessions[sessionId] && !sessions[sessionId].firstCardFound) {
-            io.to(sessionId).emit("unflip-card", { index, sessionId });
+            socket.emit("unflip-card", { index });
           }
         }, 1000);
       }
     } else {
-      // After first card is found
       if (cardNumber === game.currentSequence) {
-        // Correct card flipped
         game.flippedCards.push(index);
         game.currentSequence++;
         game.score += 10;
@@ -143,11 +150,11 @@ io.on("connection", (socket) => {
         }
         io.to(sessionId).emit("game-state", getCleanGameState(game));
       } else {
-        // Wrong card flipped - reset all cards
         game.flippedCards = [];
         game.currentSequence = 1;
         game.firstCardFound = false;
         game.score = Math.max(0, game.score - 5);
+        io.to(sessionId).emit("wrong-card");
         io.to(sessionId).emit("game-state", getCleanGameState(game));
       }
     }
@@ -161,10 +168,9 @@ io.on("connection", (socket) => {
 
     const game = sessions[sessionId];
 
-    if (game.hostSocket === socket) game.hostSocket = null;
-    if (game.mobileSocket === socket) game.mobileSocket = null;
+    if (game.hostSocket === socket.id) game.hostSocket = null;
+    if (game.mobileSocket === socket.id) game.mobileSocket = null;
 
-    // Clean up session if both disconnected
     if (!game.hostSocket && !game.mobileSocket) {
       delete sessions[sessionId];
       console.log(`Session ${sessionId} removed`);
@@ -172,12 +178,17 @@ io.on("connection", (socket) => {
   });
 });
 
-// Handle mobile.html route separately
+// Handle mobile.html route
 app.get("/mobile", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "mobile.html"));
 });
 
+// Health check endpoint
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "healthy" });
+});
+
 // Start the server
 server.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
