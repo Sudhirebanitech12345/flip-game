@@ -442,7 +442,17 @@
       tempFlipped: [],
     };
 
-    const socket = io("https://flip-game-f54r.onrender.com");
+    // Replace your current socket initialization with this:
+    const socket = io("https://flip-game-f54r.onrender.com", {
+        withCredentials: true,
+        transports: ["websocket", "polling"], // Force WebSocket first, fallback to polling
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
+        extraHeaders: {
+            "Access-Control-Allow-Origin": "http://localhost:3000"
+        }
+    });
 
     // Generate QR code
     function generateQRCode(sessionId) {

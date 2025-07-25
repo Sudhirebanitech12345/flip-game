@@ -6,7 +6,7 @@ const { v4: uuidv4 } = require("uuid");
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server);
+
 
 const PORT = process.env.PORT || 3000;
 
@@ -16,6 +16,15 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // In-memory session storage
 const sessions = {};
+
+// In your server code (Node.js/Express)
+const io = require('socket.io')(server, {
+    cors: {
+        origin: ["http://localhost:3000", "https://flip-game-f54r.onrender.com"],
+        methods: ["GET", "POST"],
+        credentials: true
+    }
+});
 
 // Fashion items data
 const fashionItems = [
