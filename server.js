@@ -71,29 +71,45 @@ function handleCardFlip(game, index) {
 
 function handleFirstCardFlip(game, index, cardNumber) {
   if (cardNumber === 1) {
-    game.firstCardFound = true;
-    game.flippedCards.push(index);
-    game.currentSequence = 2;
-    game.score += 10;
-    emitGameState(game);
+    // 1. TEMPORARY FLIP (with animation)
+    io.to(game.sessionId).emit("temp-flip", { index });
+
+    // 2. After animation completes, confirm as correct
+    setTimeout(() => {
+      game.firstCardFound = true;
+      game.flippedCards.push(index);
+      game.currentSequence = 2;
+      game.score += 10;
+      io.to(game.sessionId).emit("correct-flip", { index }); // Trigger correct animation
+      emitGameState(game);
+    }, 600); // Match duration with CSS animation (0.6s)
   } else {
+    // Wrong card (not Card 1) - show temporary flip & reset
     emitTemporaryFlip(game, index);
   }
 }
 
-function handleSubsequentCardFlip(game, index, cardNumber) {
+function handleSubsequentCardFlip(game, index, cardNumber, sessionId) {
   if (cardNumber === game.currentSequence) {
-    game.flippedCards.push(index);
-    game.currentSequence++;
-    game.score += 10;
+    // 1. TEMPORARY FLIP (with animation)
+    io.to(sessionId).emit("temp-flip", { index });
 
-    if (game.currentSequence > game.cards.length) {
-      game.gameWon = true;
-    }
-    emitGameState(game);
+    // 2. After animation, confirm as correct
+    setTimeout(() => {
+      game.flippedCards.push(index);
+      game.currentSequence++;
+      game.score += 10;
+      io.to(sessionId).emit("correct-flip", { index }); // Trigger correct animation
+      
+      if (game.currentSequence > 9) {
+        game.gameWon = true;
+      }
+      emitGameState(game);
+    }, 600);
   } else {
-    resetGameState(game);
-    emitGameState(game);
+    // Wrong card - shake animation
+    io.to(sessionId).emit("wrong-flip", { index });
+    setTimeout(() => resetGameState(game), 1000); // Reset after shake
   }
 }
 
@@ -151,11 +167,17 @@ io.on("connection", (socket) => {
   });
 
   socket.on("flip-card", ({ index, sessionId }) => {
-    const game = sessions.get(sessionId);
-    if (!game || game.gameWon) return;
-    
-    handleCardFlip(game, index);
-  });
+  const game = sessions.get(sessionId);
+  if (!game || game.gameWon) return;
+  
+  const cardNumber = game.cards[index].number;
+  
+  if (!game.firstCardFound) {
+    handleFirstCardFlip(game, index, cardNumber);
+  } else {
+    handleSubsequentCardFlip(game, index, cardNumber, sessionId);
+  }
+});
 
   socket.on("disconnect", () => {
     console.log("Client disconnected:", socket.id);
