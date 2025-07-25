@@ -3,43 +3,15 @@ const http = require("http");
 const socketIo = require("socket.io");
 const path = require("path");
 const { v4: uuidv4 } = require("uuid");
-const cors = require("cors");
 
 const app = express();
 const server = http.createServer(app);
-
-// Add this before Socket.IO initialization
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  next();
-});
-
-// Enable CORS middleware
-app.use(
-  cors({
-    origin: ["http://localhost:3000", "https://flip-game-f54r.onrender.com"],
-    methods: ["GET", "POST"],
-    credentials: true,
-  })
-);
-
-// Update your CORS configuration in server.js
-const io = socketIo(server, {
-  cors: {
-    origin: ["http://localhost:3000", "https://flip-game-f54r.onrender.com"],
-    methods: ["GET", "POST"],
-    credentials: true,
-    allowedHeaders: ["my-custom-header"],
-    transports: ["websocket", "polling"], // Add this line
-    optionsSuccessStatus: 200, // Some legacy browsers choke on 204
-  },
-});
+const io = socketIo(server);
 
 const PORT = process.env.PORT || 3000;
 
-// Serve static files from public folder
+
+// Serve static files (index.html, mobile.html, etc.) from public folder
 app.use(express.static(path.join(__dirname, "public")));
 
 // In-memory session storage
@@ -56,9 +28,6 @@ const fashionItems = [
   { number: 7, emoji: "🧥", offer: "Jacket: Winter Special" },
   { number: 8, emoji: "👗", offer: "Dress: New Arrival" },
   { number: 9, emoji: "🩳", offer: "Shorts: Summer Deal" },
-  { number: 10, emoji: "👠", offer: "Heels: Luxury Line" },
-  { number: 11, emoji: "🎒", offer: "Backpack: Student Discount" },
-  { number: 12, emoji: "🧦", offer: "Socks: 3 for 2" },
 ];
 
 // Utility to remove circular references before sending game state
@@ -71,18 +40,16 @@ function getCleanGameState(game) {
     score: game.score,
     startTime: game.startTime,
     cards: game.cards,
-    firstCardFound: game.firstCardFound,
   };
 }
 
 // Shuffle array function
 function shuffleArray(array) {
-  const newArray = [...array];
-  for (let i = newArray.length - 1; i > 0; i--) {
+  for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+    [array[i], array[j]] = [array[j], array[i]];
   }
-  return newArray;
+  return array;
 }
 
 io.on("connection", (socket) => {
@@ -91,7 +58,9 @@ io.on("connection", (socket) => {
   // Host creates a new game
   socket.on("new-game", () => {
     const sessionId = uuidv4();
-    const shuffledCards = shuffleArray(fashionItems);
+
+    // Create and shuffle cards
+    const shuffledCards = shuffleArray([...fashionItems]);
 
     sessions[sessionId] = {
       sessionId,
@@ -101,7 +70,7 @@ io.on("connection", (socket) => {
       score: 0,
       startTime: Date.now(),
       cards: shuffledCards,
-      hostSocket: socket.id,
+      hostSocket: socket,
       mobileSocket: null,
       firstCardFound: false,
     };
@@ -109,8 +78,8 @@ io.on("connection", (socket) => {
     socket.sessionId = sessionId;
     socket.join(sessionId);
 
+    // Send clean state back to host
     socket.emit("game-state", getCleanGameState(sessions[sessionId]));
-    console.log(`New game session created: ${sessionId}`);
   });
 
   // Mobile joins with a session
@@ -118,20 +87,20 @@ io.on("connection", (socket) => {
     const game = sessions[sessionId];
     if (!game) {
       socket.emit("session-not-found");
-      console.log(`Session not found: ${sessionId}`);
       return;
     }
 
-    game.mobileSocket = socket.id;
+    game.mobileSocket = socket;
     socket.sessionId = sessionId;
     socket.join(sessionId);
 
+    // Notify both parties
     io.to(sessionId).emit("mobile-connected");
+
+    // Send game state to mobile
     socket.emit("game-state", getCleanGameState(game));
-    console.log(`Mobile client connected to session: ${sessionId}`);
   });
 
-  // Modify the flip-card event handler in server.js
   socket.on("flip-card", ({ index, sessionId }) => {
     const game = sessions[sessionId];
     if (!game || game.gameWon) return;
@@ -139,23 +108,29 @@ io.on("connection", (socket) => {
     const cardNumber = game.cards[index].number;
 
     if (!game.firstCardFound) {
+      // Before first card is found
       if (cardNumber === 1) {
+        // Correct first card found
         game.firstCardFound = true;
         game.flippedCards.push(index);
         game.currentSequence = 2;
         game.score += 10;
         io.to(sessionId).emit("game-state", getCleanGameState(game));
       } else {
-        // Show the card temporarily to all clients
-        io.to(sessionId).emit("temp-flip", { index });
+        // Wrong card - schedule unflip after 2 seconds
+        const tempFlipped = [...game.flippedCards, index];
+        io.to(sessionId).emit("temp-flip", { index, sessionId });
+
         setTimeout(() => {
           if (sessions[sessionId] && !sessions[sessionId].firstCardFound) {
-            io.to(sessionId).emit("unflip-card", { index });
+            io.to(sessionId).emit("unflip-card", { index, sessionId });
           }
         }, 1000);
       }
     } else {
+      // After first card is found
       if (cardNumber === game.currentSequence) {
+        // Correct card flipped
         game.flippedCards.push(index);
         game.currentSequence++;
         game.score += 10;
@@ -165,26 +140,12 @@ io.on("connection", (socket) => {
         }
         io.to(sessionId).emit("game-state", getCleanGameState(game));
       } else {
-        // Store the current flipped cards before resetting
-        const cardsToUnflip = [...game.flippedCards];
-        const wrongCardIndex = index;
-
+        // Wrong card flipped - reset all cards
         game.flippedCards = [];
         game.currentSequence = 1;
         game.firstCardFound = false;
         game.score = Math.max(0, game.score - 5);
-
-        // Show the wrong card briefly
-        io.to(sessionId).emit("temp-flip", { index: wrongCardIndex });
-
-        // After 1 second, reset all cards and update state
-        setTimeout(() => {
-          io.to(sessionId).emit("reset-correct-cards", {
-            cardsToUnflip,
-            wrongCardIndex,
-          });
-          io.to(sessionId).emit("game-state", getCleanGameState(game));
-        }, 1000);
+        io.to(sessionId).emit("game-state", getCleanGameState(game));
       }
     }
   });
@@ -197,9 +158,10 @@ io.on("connection", (socket) => {
 
     const game = sessions[sessionId];
 
-    if (game.hostSocket === socket.id) game.hostSocket = null;
-    if (game.mobileSocket === socket.id) game.mobileSocket = null;
+    if (game.hostSocket === socket) game.hostSocket = null;
+    if (game.mobileSocket === socket) game.mobileSocket = null;
 
+    // Clean up session if both disconnected
     if (!game.hostSocket && !game.mobileSocket) {
       delete sessions[sessionId];
       console.log(`Session ${sessionId} removed`);
@@ -207,17 +169,12 @@ io.on("connection", (socket) => {
   });
 });
 
-// Handle mobile.html route
+// Handle mobile.html route separately
 app.get("/mobile", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "mobile.html"));
 });
 
-// Health check endpoint
-app.get("/health", (req, res) => {
-  res.status(200).json({ status: "healthy" });
-});
-
 // Start the server
 server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server running at http://localhost:${PORT}`);
 });

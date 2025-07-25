@@ -1,275 +1,263 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mobile Controller</title>
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mobile Controller</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-      body {
-        font-family: "Arial", sans-serif;
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 20px;
-        background: #f5f5f5;
-      }
+    body {
+      font-family: 'Arial', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      background: #f5f5f5;
+    }
 
-      .game-container {
-        border-radius: 15px;
-        padding: 20px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        width: 100%;
-        max-width: 500px;
-        background: white;
-      }
+    .game-container {
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 500px;
+      background: white;
+    }
 
-      h1 {
-        text-align: center;
-        color: #333;
-        margin-bottom: 15px;
-        font-size: 1.8em;
-      }
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 15px;
+      font-size: 1.8em;
+    }
 
-      .connection-status {
-        text-align: center;
-        margin-bottom: 15px;
-        font-weight: bold;
-        padding: 10px;
-        border-radius: 5px;
-      }
+    .connection-status {
+      text-align: center;
+      margin-bottom: 15px;
+      font-weight: bold;
+      padding: 10px;
+      border-radius: 5px;
+    }
 
-      .connected {
-        color: green;
-        background: rgba(0, 255, 0, 0.1);
-      }
+    .connected {
+      color: green;
+      background: rgba(0, 255, 0, 0.1);
+    }
 
-      .disconnected {
-        color: red;
-        background: rgba(255, 0, 0, 0.1);
-      }
+    .disconnected {
+      color: red;
+      background: rgba(255, 0, 0, 0.1);
+    }
 
-      .game-info {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 15px;
-        color: #333;
-        font-size: 1.1em;
-        font-weight: bold;
-      }
+    .game-info {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 15px;
+      color: #333;
+      font-size: 1.1em;
+      font-weight: bold;
+    }
 
-      .cards-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 15px;
-        margin-bottom: 20px;
-        justify-items: center;
-        width: 100%;
-        max-width: 450px;
-      }
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin-bottom: 20px;
+      justify-items: center;
+      width: 100%;
+      max-width: 450px;
+    }
 
-      .card {
-        width: 80px;
-        height: 140px;
-        perspective: 1000px;
-        cursor: pointer;
-      }
+    .card {
+      width: 80px;
+      height: 140px;
+      perspective: 1000px;
+      cursor: pointer;
+    }
 
-      .card-inner {
-        position: relative;
-        width: 100%;
-        height: 100%;
-        text-align: center;
-        transition: transform 0.6s;
-        transform-style: preserve-3d;
-      }
+    .card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      text-align: center;
+      transition: transform 0.6s;
+      transform-style: preserve-3d;
+    }
 
-      .card.flipped .card-inner {
-        transform: rotateY(180deg);
-      }
+    .card.flipped .card-inner {
+      transform: rotateY(180deg);
+    }
 
-      .card-face {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        backface-visibility: hidden;
-        border-radius: 10px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 10px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      }
+    .card-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
 
-      .card-back {
-        background: #d4d4d4;
-        color: white;
-        transform: rotateY(0deg);
-        background-image: url("style-up-Logo.png");
-        background-size: contain;
-        background-repeat: no-repeat;
-        background-position: center;
-      }
+    .card-back {
+      background: #d4d4d4;
+      color: white;
+      transform: rotateY(0deg);
+      background-image: url('style-up-Logo.png');
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+    }
 
-      .card-front {
-        background: white;
-        transform: rotateY(180deg);
-        color: black;
-        font-weight: bold;
-        border: 1px solid #eee;
-      }
+    .card-front {
+      background: white;
+      transform: rotateY(180deg);
+      color: black;
+      font-weight: bold;
+      border: 1px solid #eee;
+    }
 
-      .fashion-item {
-        font-size: 2.2em;
-        margin-bottom: 5px;
-      }
+    .fashion-item {
+      font-size: 2.2em;
+      margin-bottom: 5px;
+    }
 
-      .offer-text {
-        font-size: 0.9em;
-        color: #d10000;
-        font-weight: bold;
-        text-align: center;
-      }
+    .offer-text {
+      font-size: 0.9em;
+      color: #d10000;
+      font-weight: bold;
+      text-align: center;
+    }
 
-      .sequence-number {
-        font-size: 1.1em;
-        color: #333;
-        background: rgba(255, 255, 255, 0.7);
-        border-radius: 50%;
-        width: 28px;
-        height: 28px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-top: 5px;
-      }
+    .sequence-number {
+      font-size: 1.1em;
+      color: #333;
+      background: rgba(255, 255, 255, 0.7);
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 5px;
+    }
 
-      .controls {
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-        margin-top: 15px;
-      }
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 15px;
+    }
 
-      .btn {
-        background: #4caf50;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 25px;
-        font-size: 1em;
-        cursor: pointer;
-        transition: all 0.3s;
-      }
+    .btn {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 25px;
+      font-size: 1em;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
 
-      .btn:hover {
-        background: #45a049;
-      }
+    .btn:hover {
+      background: #45a049;
+    }
 
-      .status {
-        text-align: center;
-        margin-top: 15px;
-        padding: 10px;
-        border-radius: 10px;
-        font-weight: bold;
-      }
+    .status {
+      text-align: center;
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 10px;
+      font-weight: bold;
+    }
 
-      .success {
-        background: #dff0d8;
-        color: #3c763d;
-      }
+    .success {
+      background: #dff0d8;
+      color: #3c763d;
+    }
 
-      .error {
-        background: #f2dede;
-        color: #a94442;
-      }
+    .error {
+      background: #f2dede;
+      color: #a94442;
+    }
 
-      .info {
-        background: #e7f3fe;
-        color: #2196f3;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="game-container">
-      <h1>Fashion Memory Game Controller</h1>
-      <div class="connection-status" id="connectionStatus">
-        Connecting to game...
-      </div>
+    .info {
+      background: #e7f3fe;
+      color: #2196F3;
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <h1>Fashion Memory Game Controller</h1>
+    <div class="connection-status" id="connectionStatus">Connecting to game...</div>
 
-      <div class="game-info">
-        <div>Next: <span id="nextCard">1</span></div>
-        <div>Score: <span id="score">0</span></div>
-        <div>Time: <span id="time">0</span>s</div>
-      </div>
-
-      <div class="cards-grid" id="cardsGrid"></div>
-
-      <div class="controls">
-        <button class="btn" id="newGameBtn">New Game</button>
-      </div>
-
-      <div class="status" id="status"></div>
+    <div class="game-info">
+      <div>Next: <span id="nextCard">1</span></div>
+      <div>Score: <span id="score">0</span></div>
+      <div>Time: <span id="time">0</span>s</div>
     </div>
 
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-    <!-- <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script> -->
-    <script>
-      const socket = io("https://flip-game-f54r.onrender.com", {
-        withCredentials: true,
-        transports: ["websocket"], // Force WebSocket only
-      });
-    </script>
-    <script>
-      const urlParams = new URLSearchParams(window.location.search);
-      const sessionId = urlParams.get("session");
+    <div class="cards-grid" id="cardsGrid"></div>
 
-      let gameState = {
-        currentSequence: 1,
-        flippedCards: [],
-        gameWon: false,
-        score: 0,
-        startTime: Date.now(),
-        sessionId: sessionId,
-        cards: [],
-        firstCardFound: false,
-        tempFlipped: [],
-      };
+    <div class="controls">
+      <button class="btn" id="newGameBtn">New Game</button>
+    </div>
 
-      // Connect to game session
-      if (sessionId) {
-        socket.emit("mobile-connect", { sessionId: sessionId });
-      } else {
-        document.getElementById("connectionStatus").textContent =
-          "No session ID provided";
-        document.getElementById("connectionStatus").className =
-          "connection-status error";
-      }
+    <div class="status" id="status"></div>
+  </div>
 
-      function createCards() {
-        const grid = document.getElementById("cardsGrid");
-        grid.innerHTML = "";
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session');
 
-        gameState.cards.forEach((card, index) => {
-          const cardElement = document.createElement("div");
-          cardElement.className = "card";
-          if (
-            gameState.flippedCards.includes(index) ||
-            gameState.tempFlipped.includes(index)
-          ) {
-            cardElement.classList.add("flipped");
-          }
-          cardElement.dataset.index = index;
-          cardElement.dataset.number = card.number;
+    const socket = io();
 
-          cardElement.innerHTML = `
+    let gameState = {
+      currentSequence: 1,
+      flippedCards: [],
+      gameWon: false,
+      score: 0,
+      startTime: Date.now(),
+      sessionId: sessionId,
+      cards: [],
+      firstCardFound: false,
+      tempFlipped: []
+    };
+
+    // Connect to game session
+    if (sessionId) {
+      socket.emit('mobile-connect', { sessionId: sessionId });
+    } else {
+      document.getElementById('connectionStatus').textContent = 'No session ID provided';
+      document.getElementById('connectionStatus').className = 'connection-status error';
+    }
+
+    function createCards() {
+      const grid = document.getElementById('cardsGrid');
+      grid.innerHTML = '';
+
+      gameState.cards.forEach((card, index) => {
+        const cardElement = document.createElement('div');
+        cardElement.className = 'card';
+        if (gameState.flippedCards.includes(index) || gameState.tempFlipped.includes(index)) {
+          cardElement.classList.add('flipped');
+        }
+        cardElement.dataset.index = index;
+        cardElement.dataset.number = card.number;
+        
+        cardElement.innerHTML = `
           <div class="card-inner">
             <div class="card-face card-back"></div>
             <div class="card-face card-front">
@@ -280,112 +268,99 @@
           </div>
         `;
 
-          cardElement.addEventListener("click", () => {
-            if (!gameState.gameWon) {
-              socket.emit("flip-card", {
-                index: index,
-                sessionId: gameState.sessionId,
-              });
-            }
-          });
-
-          grid.appendChild(cardElement);
+        cardElement.addEventListener('click', () => {
+          if (!gameState.gameWon) {
+            socket.emit('flip-card', {
+              index: index,
+              sessionId: gameState.sessionId
+            });
+          }
         });
+
+        grid.appendChild(cardElement);
+      });
+    }
+
+    function updateUI(state) {
+      if (state.sessionId !== gameState.sessionId) return;
+
+      gameState = { 
+        ...gameState, 
+        currentSequence: state.currentSequence,
+        flippedCards: state.flippedCards,
+        gameWon: state.gameWon,
+        score: state.score,
+        startTime: state.startTime,
+        cards: state.cards || gameState.cards,
+        firstCardFound: state.firstCardFound
+      };
+
+      document.getElementById('nextCard').textContent = gameState.gameWon ? 'Complete!' : 
+        (gameState.firstCardFound ? gameState.currentSequence : '1');
+      document.getElementById('score').textContent = gameState.score;
+
+      if (state.startTime) {
+        document.getElementById('time').textContent = Math.floor((Date.now() - new Date(state.startTime)) / 1000);
       }
 
-      function updateUI(state) {
-        if (state.sessionId !== gameState.sessionId) return;
+      createCards();
 
-        gameState = {
-          ...gameState,
-          currentSequence: state.currentSequence,
-          flippedCards: state.flippedCards,
-          gameWon: state.gameWon,
-          score: state.score,
-          startTime: state.startTime,
-          cards: state.cards || gameState.cards,
-          firstCardFound: state.firstCardFound,
-        };
-
-        document.getElementById("nextCard").textContent = gameState.gameWon
-          ? "Complete!"
-          : gameState.firstCardFound
-          ? gameState.currentSequence
-          : "1";
-        document.getElementById("score").textContent = gameState.score;
-
-        if (state.startTime) {
-          document.getElementById("time").textContent = Math.floor(
-            (Date.now() - new Date(state.startTime)) / 1000
-          );
-        }
-
-        createCards();
-
-        const status = document.getElementById("status");
-        if (gameState.gameWon) {
-          status.textContent = `🎉 You won! Score: ${gameState.score}`;
-          status.className = "status success";
-        } else if (!gameState.firstCardFound) {
-          status.textContent = "Find card 1 to start the game!";
-          status.className = "status info";
-        } else {
-          status.textContent = "";
-          status.className = "status";
-        }
+      const status = document.getElementById('status');
+      if (gameState.gameWon) {
+        status.textContent = `🎉 You won! Score: ${gameState.score}`;
+        status.className = 'status success';
+      } else if (!gameState.firstCardFound) {
+        status.textContent = 'Find card 1 to start the game!';
+        status.className = 'status info';
+      } else {
+        status.textContent = '';
+        status.className = 'status';
       }
+    }
 
-      document.getElementById("newGameBtn").addEventListener("click", () => {
-        socket.emit("new-game");
-      });
+    document.getElementById('newGameBtn').addEventListener('click', () => {
+      socket.emit('new-game');
+    });
 
-      // Socket event listeners
-      socket.on("game-state", (state) => {
-        updateUI(state);
-      });
+    // Socket event listeners
+    socket.on('game-state', (state) => {
+      updateUI(state);
+    });
 
-      socket.on("temp-flip", ({ index }) => {
-        if (!gameState.tempFlipped.includes(index)) {
-          gameState.tempFlipped.push(index);
-          const card = document.querySelector(`[data-index="${index}"]`);
-          if (card) card.classList.add("flipped");
-        }
-      });
-
-      socket.on("unflip-card", ({ index }) => {
-        gameState.tempFlipped = gameState.tempFlipped.filter(
-          (i) => i !== index
-        );
+    socket.on('temp-flip', ({ index }) => {
+      if (!gameState.tempFlipped.includes(index)) {
+        gameState.tempFlipped.push(index);
         const card = document.querySelector(`[data-index="${index}"]`);
-        if (card) card.classList.remove("flipped");
-      });
+        if (card) card.classList.add('flipped');
+      }
+    });
 
-      socket.on("mobile-connected", () => {
-        document.getElementById("connectionStatus").textContent =
-          "Connected to game!";
-        document.getElementById("connectionStatus").className =
-          "connection-status connected";
-      });
+    socket.on('unflip-card', ({ index }) => {
+      gameState.tempFlipped = gameState.tempFlipped.filter(i => i !== index);
+      const card = document.querySelector(`[data-index="${index}"]`);
+      if (card) card.classList.remove('flipped');
+    });
 
-      socket.on("session-not-found", () => {
-        document.getElementById("connectionStatus").textContent =
-          "Game session not found";
-        document.getElementById("connectionStatus").className =
-          "connection-status error";
-      });
+    socket.on('mobile-connected', () => {
+      document.getElementById('connectionStatus').textContent = 'Connected to game!';
+      document.getElementById('connectionStatus').className = 'connection-status connected';
+    });
 
-      socket.on("connect", () => {
-        if (sessionId) {
-          socket.emit("mobile-connect", { sessionId: sessionId });
-        }
-      });
+    socket.on('session-not-found', () => {
+      document.getElementById('connectionStatus').textContent = 'Game session not found';
+      document.getElementById('connectionStatus').className = 'connection-status error';
+    });
 
-      socket.on("disconnect", () => {
-        document.getElementById("connectionStatus").textContent =
-          "Disconnected from game";
-        document.getElementById("connectionStatus").className =
-          "connection-status disconnected";
-      });
-    </script>
-  </body>
+    socket.on('connect', () => {
+      if (sessionId) {
+        socket.emit('mobile-connect', { sessionId: sessionId });
+      }
+    });
+
+    socket.on('disconnect', () => {
+      document.getElementById('connectionStatus').textContent = 'Disconnected from game';
+      document.getElementById('connectionStatus').className = 'connection-status disconnected';
+    });
+  </script>
+</body>
 </html>
