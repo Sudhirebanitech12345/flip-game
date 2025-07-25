@@ -1,680 +1,726 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Fashion Memory Game</title>
     <style>
-        * {
-          margin: 0;
-          padding: 0;
-          box-sizing: border-box;
-        }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-        body {
-          font-family: "Arial", sans-serif;
-          background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-          min-height: 100vh;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          padding: 20px;
-        }
+      body {
+        font-family: "Arial", sans-serif;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
 
-        .game-container {
-          background: rgba(255, 255, 255, 0.1);
-          backdrop-filter: blur(10px);
-          border-radius: 20px;
-          padding: 30px;
-          box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          max-width: 1000px;
-          width: 100%;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-        }
+      .game-container {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        max-width: 1000px;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
 
-        h1 {
-          text-align: center;
-          color: white;
-          margin-bottom: 10px;
-          font-size: 2.5em;
-          text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-        }
+      h1 {
+        text-align: center;
+        color: white;
+        margin-bottom: 10px;
+        font-size: 2.5em;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      }
 
-        .instructions {
-          text-align: center;
-          color: rgba(255, 255, 255, 0.9);
-          margin-bottom: 20px;
-          font-size: 1.1em;
-          line-height: 1.5;
-          max-width: 800px;
-        }
+      .instructions {
+        text-align: center;
+        color: rgba(255, 255, 255, 0.9);
+        margin-bottom: 20px;
+        font-size: 1.1em;
+        line-height: 1.5;
+        max-width: 800px;
+      }
 
-        .qr-section {
-          text-align: center;
-          margin-bottom: 20px;
-          padding: 30px;
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 10px;
-          width: 100%;
-          max-width: 300px;
-        }
+      .qr-section {
+        text-align: center;
+        margin-bottom: 20px;
+        padding: 30px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        width: 100%;
+        max-width: 300px;
+      }
 
-        .qr-code {
-          width: 200px;
-          height: 200px;
-          margin: 0 auto 10px;
-          background: white;
-          padding: 10px;
-          border-radius: 5px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
+      .qr-code {
+        width: 200px;
+        height: 200px;
+        margin: 0 auto 10px;
+        background: white;
+        padding: 10px;
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
 
-        .qr-code canvas {
-          max-width: 100%;
-          max-height: 100%;
-        }
+      .qr-code canvas {
+        max-width: 100%;
+        max-height: 100%;
+      }
 
-        .connection-status {
-          margin-top: 10px;
-          font-weight: bold;
-          color: #ffd700;
-        }
+      .connection-status {
+        margin-top: 10px;
+        font-weight: bold;
+        color: #ffd700;
+      }
 
-        .connected {
-          color: #2ed573 !important;
-        }
+      .connected {
+        color: #2ed573 !important;
+      }
 
-        .game-info {
-          display: flex;
-          justify-content: space-between;
-          margin-bottom: 20px;
-          color: white;
-          font-size: 1.2em;
-          font-weight: bold;
-          width: 100%;
-          max-width: 800px;
-          flex-wrap: wrap;
-          gap: 10px;
-        }
+      .game-info {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        color: white;
+        font-size: 1.2em;
+        font-weight: bold;
+        width: 100%;
+        max-width: 800px;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
 
-        .next-card {
-          color: #ffd700;
-          text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-        }
+      .next-card {
+        color: #ffd700;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+      }
 
-        .score {
-          color: #ffd700;
-          text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-        }
+      .score {
+        color: #ffd700;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+      }
 
-        .timer {
-          color: #ffd700;
-          text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-        }
+      .timer {
+        color: #ffd700;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+      }
 
-        .cards-container {
-          width: 100%;
-          overflow: auto;
-          margin-bottom: 20px;
-        }
+      .cards-container {
+        width: 100%;
+        overflow: auto;
+        margin-bottom: 20px;
+      }
 
+      .cards-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+        margin: 0 auto;
+        justify-items: center;
+        width: fit-content;
+        padding: 10px;
+      }
+
+      .card {
+        width: 180px;
+        height: 180px;
+        perspective: 1000px;
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+
+      .card-inner {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        text-align: center;
+        transition: transform 0.6s;
+        transform-style: preserve-3d;
+      }
+
+      .card.flipped .card-inner {
+        transform: rotateY(180deg);
+      }
+
+      .card-face {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        backface-visibility: hidden;
+        border-radius: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 10px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+      }
+
+      .card-back {
+        background: #d8d8d8;
+        color: white;
+        transform: rotateY(0deg);
+        font-size: 2em;
+        font-weight: bold;
+        background-image: url("style-up-Logo.png");
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+      }
+
+      .card-front {
+        background: white;
+        transform: rotateY(180deg);
+        color: black;
+        font-weight: bold;
+      }
+
+      .fashion-item {
+        font-size: 3em;
+        margin-bottom: 10px;
+      }
+
+      .offer-text {
+        font-size: 1.2em;
+        color: #d10000;
+        font-weight: bold;
+        margin-top: 10px;
+        text-align: center;
+      }
+
+      .sequence-number {
+        font-size: 1.5em;
+        color: #333;
+        background: rgba(255, 255, 255, 0.7);
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 10px;
+      }
+
+      .card:hover {
+        transform: scale(1.05);
+      }
+
+      .card.correct {
+        transform: rotateY(180deg);
+      }
+
+      .card.wrong {
+        transform: rotateY(180deg);
+      }
+
+      @keyframes correctPulse {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.1);
+        }
+      }
+
+      @keyframes wrongShake {
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+        25% {
+          transform: translateX(-10px);
+        }
+        75% {
+          transform: translateX(10px);
+        }
+      }
+
+      .controls {
+        text-align: center;
+        width: 100%;
+        max-width: 800px;
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        flex-wrap: wrap;
+      }
+
+      .btn {
+        background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+        color: white;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 25px;
+        font-size: 1.1em;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        min-width: 150px;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 7px 20px rgba(0, 0, 0, 0.3);
+      }
+
+      .btn:active {
+        transform: translateY(0);
+      }
+
+      .status {
+        text-align: center;
+        margin-top: 15px;
+        padding: 10px;
+        border-radius: 10px;
+        font-weight: bold;
+        min-height: 20px;
+        width: 100%;
+        max-width: 800px;
+      }
+
+      .status.success {
+        background: rgba(46, 213, 115, 0.2);
+        color: #2ed573;
+        border: 1px solid rgba(46, 213, 115, 0.5);
+      }
+
+      .status.error {
+        background: rgba(255, 107, 107, 0.2);
+        color: #ff6b6b;
+        border: 1px solid rgba(255, 107, 107, 0.5);
+      }
+
+      .status.info {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+
+      /* Screen states */
+      #qrScreen {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      #gameScreen {
+        display: none;
+        width: 100%;
+      }
+
+      @media (max-width: 900px) {
         .cards-grid {
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 15px;
-          margin: 0 auto;
-          justify-items: center;
-          width: fit-content;
-          padding: 10px;
+          grid-template-columns: repeat(3, 1fr);
         }
 
         .card {
-          width: 180px;
-          height: 180px;
-          perspective: 1000px;
-          cursor: pointer;
-          transition: transform 0.2s;
+          width: 150px;
+          height: 150px;
+        }
+      }
+
+      @media (max-width: 700px) {
+        .cards-grid {
+          grid-template-columns: repeat(2, 1fr);
         }
 
-        .card-inner {
-          position: relative;
-          width: 100%;
-          height: 100%;
-          text-align: center;
-          transition: transform 0.6s;
-          transform-style: preserve-3d;
-        }
-
-        .card.flipped .card-inner {
-          transform: rotateY(180deg);
-        }
-
-        .card-face {
-          position: absolute;
-          width: 100%;
-          height: 100%;
-          backface-visibility: hidden;
-          border-radius: 10px;
-          display: flex;
+        .game-info {
           flex-direction: column;
           align-items: center;
-          justify-content: center;
-          padding: 10px;
-          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
         }
 
-        .card-back {
-          background: #d8d8d8;
-          color: white;
-          transform: rotateY(0deg);
-          font-size: 2em;
-          font-weight: bold;
-          background-image: url("style-up-Logo.png");
-          background-size: contain;
-          background-repeat: no-repeat;
-          background-position: center;
-        }
-
-        .card-front {
-          background: white;
-          transform: rotateY(180deg);
-          color: black;
-          font-weight: bold;
+        .card {
+          width: 140px;
+          height: 140px;
         }
 
         .fashion-item {
-          font-size: 3em;
-          margin-bottom: 10px;
+          font-size: 2em;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .cards-grid {
+          grid-template-columns: repeat(2, 1fr);
         }
 
-        .offer-text {
-          font-size: 1.2em;
-          color: #d10000;
-          font-weight: bold;
-          margin-top: 10px;
-          text-align: center;
+        .card {
+          width: 120px;
+          height: 120px;
         }
 
-        .sequence-number {
-          font-size: 1.5em;
-          color: #333;
-          background: rgba(255, 255, 255, 0.7);
-          border-radius: 50%;
-          width: 40px;
-          height: 40px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-top: 10px;
-        }
-
-        .card:hover {
-          transform: scale(1.05);
-        }
-
-        .card.correct {
-          transform: rotateY(180deg);
-        }
-
-        .card.wrong {
-          transform: rotateY(180deg);
-        }
-
-        @keyframes correctPulse {
-          0%,
-          100% {
-            transform: scale(1);
-          }
-          50% {
-            transform: scale(1.1);
-          }
-        }
-
-        @keyframes wrongShake {
-          0%,
-          100% {
-            transform: translateX(0);
-          }
-          25% {
-            transform: translateX(-10px);
-          }
-          75% {
-            transform: translateX(10px);
-          }
+        .fashion-item {
+          font-size: 1.8em;
         }
 
         .controls {
-          text-align: center;
-          width: 100%;
-          max-width: 800px;
-          display: flex;
-          justify-content: center;
-          gap: 15px;
-          flex-wrap: wrap;
-        }
-
-        .btn {
-          background: linear-gradient(135deg, #ff6b6b, #ee5a24);
-          color: white;
-          border: none;
-          padding: 12px 25px;
-          border-radius: 25px;
-          font-size: 1.1em;
-          font-weight: bold;
-          cursor: pointer;
-          transition: all 0.3s;
-          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-          min-width: 150px;
-        }
-
-        .btn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 7px 20px rgba(0, 0, 0, 0.3);
-        }
-
-        .btn:active {
-          transform: translateY(0);
-        }
-
-        .status {
-          text-align: center;
-          margin-top: 15px;
-          padding: 10px;
-          border-radius: 10px;
-          font-weight: bold;
-          min-height: 20px;
-          width: 100%;
-          max-width: 800px;
-        }
-
-        .status.success {
-          background: rgba(46, 213, 115, 0.2);
-          color: #2ed573;
-          border: 1px solid rgba(46, 213, 115, 0.5);
-        }
-
-        .status.error {
-          background: rgba(255, 107, 107, 0.2);
-          color: #ff6b6b;
-          border: 1px solid rgba(255, 107, 107, 0.5);
-        }
-
-        .status.info {
-          background: rgba(255, 255, 255, 0.1);
-          color: white;
-          border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-
-        /* Screen states */
-        #qrScreen {
-          display: flex;
           flex-direction: column;
           align-items: center;
         }
 
-        #gameScreen {
-          display: none;
+        .btn {
           width: 100%;
         }
-
-        @media (max-width: 900px) {
-          .cards-grid {
-            grid-template-columns: repeat(3, 1fr);
-          }
-
-          .card {
-            width: 150px;
-            height: 150px;
-          }
-        }
-
-        @media (max-width: 700px) {
-          .cards-grid {
-            grid-template-columns: repeat(2, 1fr);
-          }
-
-          .game-info {
-            flex-direction: column;
-            align-items: center;
-          }
-
-          .card {
-            width: 140px;
-            height: 140px;
-          }
-
-          .fashion-item {
-            font-size: 2em;
-          }
-        }
-
-        @media (max-width: 480px) {
-          .cards-grid {
-            grid-template-columns: repeat(2, 1fr);
-          }
-
-          .card {
-            width: 120px;
-            height: 120px;
-          }
-
-          .fashion-item {
-            font-size: 1.8em;
-          }
-
-          .controls {
-            flex-direction: column;
-            align-items: center;
-          }
-
-          .btn {
-            width: 100%;
-          }
-        }
+      }
     </style>
-</head>
-<body>
-<div class="game-container">
-    <div id="qrScreen">
+  </head>
+  <body>
+    <div class="game-container">
+      <div id="qrScreen">
         <h1>Fashion Memory Game</h1>
         <div class="instructions">
-            Connect your mobile device to control the game
+          Connect your mobile device to control the game
         </div>
 
         <!-- QR Code Section -->
         <div class="qr-section">
-            <h3>Connect Mobile Controller</h3>
-            <div class="qr-code" id="qrCode">Loading QR Code...</div>
-            <div class="connection-status" id="connectionStatus">
-                Scan QR code to connect mobile
-            </div>
+          <h3>Connect Mobile Controller</h3>
+          <div class="qr-code" id="qrCode">Loading QR Code...</div>
+          <div class="connection-status" id="connectionStatus">
+            Scan QR code to connect mobile
+          </div>
         </div>
-    </div>
+      </div>
 
-    <div id="gameScreen">
+      <div id="gameScreen">
         <h1>Fashion Memory Game</h1>
         <div class="instructions">
-            Find and flip cards in sequence from 1 to 12 to reveal fashion items
-            and special offers!<br />
-            +10 points for each correct card!<br />
-            Wrong selection hides all cards!
+          Find and flip cards in sequence from 1 to 12 to reveal fashion items
+          and special offers!<br />
+          +10 points for each correct card!<br />
+          Wrong selection hides all cards!
         </div>
 
         <div class="game-info">
-            <div>Progress: <span id="progress">0/12</span></div>
-            <div class="next-card">Next: <span id="nextCard">1</span></div>
-            <div class="score">Score: <span id="score">0</span></div>
-            <div class="timer">Time: <span id="time">0</span>s</div>
+          <div>Progress: <span id="progress">0/12</span></div>
+          <div class="next-card">Next: <span id="nextCard">1</span></div>
+          <div class="score">Score: <span id="score">0</span></div>
+          <div class="timer">Time: <span id="time">0</span>s</div>
         </div>
 
         <div class="cards-container">
-            <div class="cards-grid" id="cardsGrid"></div>
+          <div class="cards-grid" id="cardsGrid"></div>
         </div>
 
         <div class="controls">
-            <button class="btn" id="newGameBtn">New Game</button>
-            <button class="btn" id="peekBtn">Peek All</button>
+          <button class="btn" id="newGameBtn">New Game</button>
+          <button class="btn" id="peekBtn">Peek All</button>
         </div>
 
         <div class="status" id="status"></div>
+      </div>
     </div>
-</div>
 
-<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
-<script>
-    let gameState = {
-      cards: [],
-      currentSequence: 1,
-      flippedCards: [],
-      gameWon: false,
-      score: 0,
-      startTime: null,
-      timerInterval: null,
-      sessionId: null,
-      firstCardFound: false,
-      tempFlipped: [],
-    };
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <script>
+      let gameState = {
+        cards: [],
+        currentSequence: 1,
+        flippedCards: [],
+        gameWon: false,
+        score: 0,
+        startTime: null,
+        timerInterval: null,
+        sessionId: null,
+        firstCardFound: false,
+        tempFlipped: [],
+      };
 
-    
-    // Make sure this matches your server URL
-  const socket = io("https://flip-game-f54r.onrender.com", {
-    withCredentials: true
-  });
-
-
-    // Generate QR code
-    function generateQRCode(sessionId) {
-      const url = `https://flip-game-f54r.onrender.com/mobile?session=${sessionId}`;
-
-      QRCode.toCanvas(
-        url,
-        {
-          width: 180,
-          margin: 1,
-          color: {
-            dark: "#000000",
-            light: "#FFFFFF",
-          },
-        },
-        (error, canvas) => {
-          if (error) {
-            console.error("QR Code generation error:", error);
-            document.getElementById("qrCode").innerHTML =
-              "QR Code generation failed";
-            return;
-          }
-
-          const qrDiv = document.getElementById("qrCode");
-          qrDiv.innerHTML = "";
-          qrDiv.appendChild(canvas);
-        }
-      );
-    }
-
-    function initializeGame() {
-      socket.emit("new-game");
-    }
-
-    function updateTimer() {
-      const elapsedSeconds = Math.floor(
-        (Date.now() - gameState.startTime) / 1000
-      );
-      document.getElementById("time").textContent = elapsedSeconds;
-    }
-
-    function createCards() {
-      const grid = document.getElementById("cardsGrid");
-      grid.innerHTML = "";
-
-      gameState.cards.forEach((card, index) => {
-        const cardElement = document.createElement("div");
-        cardElement.className = "card";
-        if (
-          gameState.flippedCards.includes(index) ||
-          gameState.tempFlipped.includes(index)
-        ) {
-          cardElement.classList.add("flipped");
-        }
-        cardElement.dataset.index = index;
-        cardElement.dataset.number = card.number;
-
-        cardElement.innerHTML = `
-              <div class="card-inner">
-                  <div class="card-face card-back"></div>
-                  <div class="card-face card-front">
-                      <div class="fashion-item">${card.emoji}</div>
-                      <div class="offer-text">${card.offer}</div>
-                      <div class="sequence-number">${card.number}</div>
-                  </div>
-              </div>
-          `;
-
-        // Add click handler for manual flipping
-        cardElement.addEventListener("click", () => {
-          if (!gameState.flippedCards.includes(index)) {
-            socket.emit("flip-card", { index });
-          }
-        });
-
-        grid.appendChild(cardElement);
+      const socket = io("https://flip-game-f54r.onrender.com", {
+        withCredentials: true,
+        transports: ["websocket", "polling"],
       });
-    }
 
-    function updateUI() {
-      document.getElementById("progress").textContent = `${
-        gameState.currentSequence - 1
-      }/12`;
-      document.getElementById("nextCard").textContent = gameState.gameWon
-        ? "Complete!"
-        : gameState.currentSequence;
-      document.getElementById("score").textContent = gameState.score;
-    }
+      // Generate QR code
+      function generateQRCode(sessionId) {
+        const url = `https://flip-game-f54r.onrender.com/mobile?session=${sessionId}`;
 
-    function showStatus(message, type) {
-      const status = document.getElementById("status");
-      status.textContent = message;
-      status.className = `status ${type}`;
-    }
+        QRCode.toCanvas(
+          url,
+          {
+            width: 180,
+            margin: 1,
+            color: {
+              dark: "#000000",
+              light: "#FFFFFF",
+            },
+          },
+          (error, canvas) => {
+            if (error) {
+              console.error("QR Code generation error:", error);
+              document.getElementById("qrCode").innerHTML =
+                "QR Code generation failed";
+              return;
+            }
 
-    function showAllCards() {
-      const cards = document.querySelectorAll(".card");
-      cards.forEach((card) => card.classList.add("flipped"));
-
-      setTimeout(() => {
-        cards.forEach((card) => {
-          if (
-            !gameState.flippedCards.includes(parseInt(card.dataset.index))
-          ) {
-            card.classList.remove("flipped");
+            const qrDiv = document.getElementById("qrCode");
+            qrDiv.innerHTML = "";
+            qrDiv.appendChild(canvas);
           }
-        });
-      }, 2000);
-
-      showStatus("Peeking at all cards for 2 seconds...", "info");
-    }
-
-    function switchToGameScreen() {
-      document.getElementById("qrScreen").style.display = "none";
-      document.getElementById("gameScreen").style.display = "block";
-    }
-
-    // Socket event listeners
-    socket.on("connect", () => {
-      console.log("✅ Connected with ID:", socket.id);
-      generateQRCode(socket.id);
-    });
-
-    socket.on("game-state", (state) => {
-      if (state.sessionId !== gameState.sessionId) {
-        gameState.sessionId = state.sessionId;
-        generateQRCode(state.sessionId);
+        );
       }
 
-      gameState.cards = state.cards;
-      gameState.currentSequence = state.currentSequence;
-      gameState.flippedCards = state.flippedCards;
-      gameState.gameWon = state.gameWon;
-      gameState.score = state.score;
-      gameState.firstCardFound = state.firstCardFound;
-      gameState.tempFlipped = [];
-
-      if (state.startTime) {
-        gameState.startTime = new Date(state.startTime);
-        if (!gameState.timerInterval) {
-          gameState.timerInterval = setInterval(updateTimer, 1000);
-        }
+      function initializeGame() {
+        socket.emit("new-game");
       }
 
-      updateUI();
-      createCards();
-
-      if (state.gameWon) {
-        clearInterval(gameState.timerInterval);
+      function updateTimer() {
         const elapsedSeconds = Math.floor(
           (Date.now() - gameState.startTime) / 1000
         );
-        showStatus(
-          `🎉 You won in ${elapsedSeconds} seconds! Final Score: ${gameState.score}`,
-          "success"
-        );
-      } else if (
-        state.flippedCards.length === 0 &&
-        state.currentSequence === 1 &&
-        state.firstCardFound === false
-      ) {
-        showStatus("Find card 1 to start the game!", "info");
+        document.getElementById("time").textContent = elapsedSeconds;
       }
-    });
 
-    socket.on("temp-flip", ({ index }) => {
-      if (!gameState.tempFlipped.includes(index)) {
-        gameState.tempFlipped.push(index);
+      function createCards() {
+        const grid = document.getElementById("cardsGrid");
+        grid.innerHTML = "";
+
+        gameState.cards.forEach((card, index) => {
+          const cardElement = document.createElement("div");
+          cardElement.className = "card";
+
+          // Check if card should be flipped
+          const shouldBeFlipped =
+            gameState.flippedCards.includes(index) ||
+            gameState.tempFlipped.includes(index);
+          if (shouldBeFlipped) {
+            cardElement.classList.add("flipped");
+          }
+
+          cardElement.dataset.index = index;
+          cardElement.dataset.number = card.number;
+
+          cardElement.innerHTML = `
+        <div class="card-inner">
+            <div class="card-face card-back"></div>
+            <div class="card-face card-front">
+                <div class="fashion-item">${card.emoji}</div>
+                <div class="offer-text">${card.offer}</div>
+                <div class="sequence-number">${card.number}</div>
+            </div>
+        </div>
+    `;
+
+          // Add click handler for manual flipping
+          cardElement.addEventListener("click", () => {
+            if (!gameState.flippedCards.includes(index) && !gameState.gameWon) {
+              socket.emit("flip-card", {
+                index: index,
+                sessionId: gameState.sessionId,
+              });
+            }
+          });
+
+          grid.appendChild(cardElement);
+        });
+      }
+
+      function updateUI() {
+        document.getElementById("progress").textContent = `${
+          gameState.currentSequence - 1
+        }/12`;
+        document.getElementById("nextCard").textContent = gameState.gameWon
+          ? "Complete!"
+          : gameState.currentSequence;
+        document.getElementById("score").textContent = gameState.score;
+      }
+
+      function showStatus(message, type) {
+        const status = document.getElementById("status");
+        status.textContent = message;
+        status.className = `status ${type}`;
+      }
+
+      function showAllCards() {
+        const cards = document.querySelectorAll(".card");
+        cards.forEach((card) => card.classList.add("flipped"));
+
+        setTimeout(() => {
+          cards.forEach((card) => {
+            if (
+              !gameState.flippedCards.includes(parseInt(card.dataset.index))
+            ) {
+              card.classList.remove("flipped");
+            }
+          });
+        }, 2000);
+
+        showStatus("Peeking at all cards for 2 seconds...", "info");
+      }
+
+      function switchToGameScreen() {
+        document.getElementById("qrScreen").style.display = "none";
+        document.getElementById("gameScreen").style.display = "block";
+      }
+
+      // Socket event listeners
+      socket.on("connect", () => {
+        console.log("✅ Connected with ID:", socket.id);
+        generateQRCode(socket.id);
+      });
+
+      // Add these with your other socket event listeners
+      socket.on("temp-flip", ({ index }) => {
+        console.log("Temporarily flipping card:", index);
         const card = document.querySelector(`[data-index="${index}"]`);
-        if (card) card.classList.add("flipped");
-      }
-    });
+        if (card && !gameState.flippedCards.includes(index)) {
+          card.classList.add("flipped");
+        }
+      });
 
-    socket.on("unflip-card", ({ index }) => {
-      gameState.tempFlipped = gameState.tempFlipped.filter(
-        (i) => i !== index
-      );
-      const card = document.querySelector(`[data-index="${index}"]`);
-      if (card) card.classList.remove("flipped");
-    });
+      socket.on("reset-correct-cards", ({ cardsToUnflip, wrongCardIndex }) => {
+        console.log("Resetting cards after wrong selection");
 
-    socket.on("wrong-card", () => {
-      // Show all cards briefly before unflipping
-      const cards = document.querySelectorAll(".card");
-      cards.forEach(card => card.classList.add("flipped"));
-
-      setTimeout(() => {
-        cards.forEach(card => {
-          if (!gameState.flippedCards.includes(parseInt(card.dataset.index))) {
+        // Unflip all previously correct cards
+        cardsToUnflip.forEach((index) => {
+          const card = document.querySelector(`[data-index="${index}"]`);
+          if (card) {
             card.classList.remove("flipped");
           }
         });
-      }, 1000);
 
-      showStatus("Wrong card! All cards will be hidden", "error");
-    });
+        // Also unflip the wrong card
+        const wrongCard = document.querySelector(
+          `[data-index="${wrongCardIndex}"]`
+        );
+        if (wrongCard) {
+          wrongCard.classList.remove("flipped");
+        }
 
-    socket.on("mobile-connected", () => {
-      document.getElementById("connectionStatus").textContent =
-        "Mobile connected!";
-      document.getElementById("connectionStatus").classList.add("connected");
-      switchToGameScreen();
-    });
+        showStatus("Wrong card! Starting over from card 1", "error");
+      });
 
-    socket.on("connect", () => {
-      console.log("Connected to server");
-    });
+      socket.on("game-state", (state) => {
+        console.log("Received game state:", state); // Add debug log
 
-    socket.on("disconnect", () => {
-      console.log("Disconnected from server");
-      document.getElementById("connectionStatus").textContent =
-        "Disconnected from server";
+        if (state.sessionId !== gameState.sessionId) {
+          gameState.sessionId = state.sessionId;
+          generateQRCode(state.sessionId);
+        }
+
+        gameState.cards = state.cards;
+        gameState.currentSequence = state.currentSequence;
+        gameState.flippedCards = state.flippedCards;
+        gameState.gameWon = state.gameWon;
+        gameState.score = state.score;
+        gameState.firstCardFound = state.firstCardFound;
+        gameState.tempFlipped = state.tempFlipped || []; // Ensure it exists
+
+        if (state.startTime) {
+          gameState.startTime = new Date(state.startTime);
+          if (!gameState.timerInterval) {
+            gameState.timerInterval = setInterval(updateTimer, 1000);
+          }
+        }
+
+        updateUI();
+        createCards();
+
+        if (state.gameWon) {
+          clearInterval(gameState.timerInterval);
+          const elapsedSeconds = Math.floor(
+            (Date.now() - gameState.startTime) / 1000
+          );
+          showStatus(
+            `🎉 You won in ${elapsedSeconds} seconds! Final Score: ${gameState.score}`,
+            "success"
+          );
+        } else if (
+          state.flippedCards.length === 0 &&
+          state.currentSequence === 1 &&
+          state.firstCardFound === false
+        ) {
+          showStatus("Find card 1 to start the game!", "info");
+        }
+      });
+
+      // New event: Immediately flip the clicked card
+      socket.on("flip-card-immediate", ({ index }) => {
+        console.log("Flipping card immediately:", index);
+        const card = document.querySelector(`[data-index="${index}"]`);
+        if (card) {
+          card.classList.add("flipped");
+        }
+      });
+
+      // New event: Reset correctly flipped cards when wrong card is clicked
+      socket.on("reset-correct-cards", ({ cardsToUnflip, wrongCardIndex }) => {
+        console.log(
+          "Resetting correct cards:",
+          cardsToUnflip,
+          "Wrong card:",
+          wrongCardIndex
+        );
+
+        // Unflip all previously correct cards
+        cardsToUnflip.forEach((cardIndex) => {
+          const card = document.querySelector(`[data-index="${cardIndex}"]`);
+          if (card) {
+            card.classList.remove("flipped");
+          }
+        });
+
+        // Also unflip the wrong card after showing it
+        const wrongCard = document.querySelector(
+          `[data-index="${wrongCardIndex}"]`
+        );
+        if (wrongCard) {
+          wrongCard.classList.remove("flipped");
+        }
+
+        showStatus("Wrong card! Starting over from card 1", "error");
+      });
+
+      socket.on("unflip-card", ({ index }) => {
+        console.log("Unflipping card:", index);
+        const card = document.querySelector(`[data-index="${index}"]`);
+        if (card) {
+          card.classList.remove("flipped");
+        }
+      });
+
+      socket.on("mobile-connected", () => {
+        document.getElementById("connectionStatus").textContent =
+          "Mobile connected!";
+        document.getElementById("connectionStatus").classList.add("connected");
+        switchToGameScreen();
+      });
+
+      socket.on("disconnect", () => {
+        console.log("Disconnected from server");
+        document.getElementById("connectionStatus").textContent =
+          "Disconnected from server";
+        document
+          .getElementById("connectionStatus")
+          .classList.remove("connected");
+      });
+
+      // Button event listeners
       document
-        .getElementById("connectionStatus")
-        .classList.remove("connected");
-    });
+        .getElementById("newGameBtn")
+        .addEventListener("click", initializeGame);
+      document
+        .getElementById("peekBtn")
+        .addEventListener("click", showAllCards);
 
-    // Button event listeners
-    document
-      .getElementById("newGameBtn")
-      .addEventListener("click", initializeGame);
-    document
-      .getElementById("peekBtn")
-      .addEventListener("click", showAllCards);
-
-    // Initialize the game when page loads//
-    window.addEventListener("load", initializeGame);
-</script>
-</body>
+      // Initialize the game when page loads
+      window.addEventListener("load", initializeGame);
+    </script>
+  </body>
 </html>
