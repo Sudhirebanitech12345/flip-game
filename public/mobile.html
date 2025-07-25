@@ -219,43 +219,94 @@
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
+    const socket = io();
     const urlParams = new URLSearchParams(window.location.search);
     const sessionId = urlParams.get('session');
-
-    const socket = io();
-
-    let gameState = {
+    
+    const gameState = {
       currentSequence: 1,
       flippedCards: [],
       gameWon: false,
       score: 0,
       startTime: Date.now(),
-      sessionId: sessionId,
+      sessionId,
       cards: [],
       firstCardFound: false,
       tempFlipped: []
     };
 
-    // Connect to game session
+    // DOM Elements
+    const connectionStatus = document.getElementById('connectionStatus');
+    const nextCardDisplay = document.getElementById('nextCard');
+    const scoreDisplay = document.getElementById('score');
+    const timeDisplay = document.getElementById('time');
+    const statusDisplay = document.getElementById('status');
+    const cardsGrid = document.getElementById('cardsGrid');
+    const newGameBtn = document.getElementById('newGameBtn');
+
+    // Initialize connection
     if (sessionId) {
-      socket.emit('mobile-connect', { sessionId: sessionId });
+      socket.emit('mobile-connect', { sessionId });
     } else {
-      document.getElementById('connectionStatus').textContent = 'No session ID provided';
-      document.getElementById('connectionStatus').className = 'connection-status error';
+      updateConnectionStatus('No session ID provided', 'error');
     }
 
-    function createCards() {
-      const grid = document.getElementById('cardsGrid');
-      grid.innerHTML = '';
+    // Event Listeners
+    newGameBtn.addEventListener('click', () => socket.emit('new-game'));
 
+    // Socket Event Handlers
+    socket.on('game-state', updateGameState);
+    socket.on('temp-flip', handleTempFlip);
+    socket.on('unflip-card', handleUnflipCard);
+    socket.on('mobile-connected', () => updateConnectionStatus('Connected to game!', 'connected'));
+    socket.on('session-not-found', () => updateConnectionStatus('Game session not found', 'error'));
+    socket.on('connect', () => sessionId && socket.emit('mobile-connect', { sessionId }));
+    socket.on('disconnect', () => updateConnectionStatus('Disconnected from game', 'disconnected'));
+
+    // Game Functions
+    function updateGameState(state) {
+      if (state.sessionId !== gameState.sessionId) return;
+
+      Object.assign(gameState, {
+        currentSequence: state.currentSequence,
+        flippedCards: state.flippedCards,
+        gameWon: state.gameWon,
+        score: state.score,
+        startTime: state.startTime,
+        cards: state.cards || gameState.cards,
+        firstCardFound: state.firstCardFound
+      });
+
+      updateUI();
+    }
+
+    function updateUI() {
+      nextCardDisplay.textContent = gameState.gameWon ? 'Complete!' : 
+        (gameState.firstCardFound ? gameState.currentSequence : '1');
+      scoreDisplay.textContent = gameState.score;
+      timeDisplay.textContent = Math.floor((Date.now() - new Date(gameState.startTime)) / 1000);
+
+      renderCards();
+
+      if (gameState.gameWon) {
+        statusDisplay.textContent = `🎉 You won! Score: ${gameState.score}`;
+        statusDisplay.className = 'status success';
+      } else if (!gameState.firstCardFound) {
+        statusDisplay.textContent = 'Find card 1 to start the game!';
+        statusDisplay.className = 'status info';
+      } else {
+        statusDisplay.textContent = '';
+        statusDisplay.className = 'status';
+      }
+    }
+
+    function renderCards() {
+      cardsGrid.innerHTML = '';
+      
       gameState.cards.forEach((card, index) => {
         const cardElement = document.createElement('div');
-        cardElement.className = 'card';
-        if (gameState.flippedCards.includes(index) || gameState.tempFlipped.includes(index)) {
-          cardElement.classList.add('flipped');
-        }
+        cardElement.className = `card ${shouldBeFlipped(index) ? 'flipped' : ''}`;
         cardElement.dataset.index = index;
-        cardElement.dataset.number = card.number;
         
         cardElement.innerHTML = `
           <div class="card-inner">
@@ -270,97 +321,34 @@
 
         cardElement.addEventListener('click', () => {
           if (!gameState.gameWon) {
-            socket.emit('flip-card', {
-              index: index,
-              sessionId: gameState.sessionId
-            });
+            socket.emit('flip-card', { index, sessionId: gameState.sessionId });
           }
         });
 
-        grid.appendChild(cardElement);
+        cardsGrid.appendChild(cardElement);
       });
     }
 
-    function updateUI(state) {
-      if (state.sessionId !== gameState.sessionId) return;
+    function shouldBeFlipped(index) {
+      return gameState.flippedCards.includes(index) || gameState.tempFlipped.includes(index);
+    }
 
-      gameState = { 
-        ...gameState, 
-        currentSequence: state.currentSequence,
-        flippedCards: state.flippedCards,
-        gameWon: state.gameWon,
-        score: state.score,
-        startTime: state.startTime,
-        cards: state.cards || gameState.cards,
-        firstCardFound: state.firstCardFound
-      };
-
-      document.getElementById('nextCard').textContent = gameState.gameWon ? 'Complete!' : 
-        (gameState.firstCardFound ? gameState.currentSequence : '1');
-      document.getElementById('score').textContent = gameState.score;
-
-      if (state.startTime) {
-        document.getElementById('time').textContent = Math.floor((Date.now() - new Date(state.startTime)) / 1000);
-      }
-
-      createCards();
-
-      const status = document.getElementById('status');
-      if (gameState.gameWon) {
-        status.textContent = `🎉 You won! Score: ${gameState.score}`;
-        status.className = 'status success';
-      } else if (!gameState.firstCardFound) {
-        status.textContent = 'Find card 1 to start the game!';
-        status.className = 'status info';
-      } else {
-        status.textContent = '';
-        status.className = 'status';
+    function handleTempFlip({ index }) {
+      if (!gameState.tempFlipped.includes(index)) {
+        gameState.tempFlipped.push(index);
+        renderCards();
       }
     }
 
-    document.getElementById('newGameBtn').addEventListener('click', () => {
-      socket.emit('new-game');
-    });
-
-    // Socket event listeners
-    socket.on('game-state', (state) => {
-      updateUI(state);
-    });
-
-    socket.on('temp-flip', ({ index }) => {
-      if (!gameState.tempFlipped.includes(index)) {
-        gameState.tempFlipped.push(index);
-        const card = document.querySelector(`[data-index="${index}"]`);
-        if (card) card.classList.add('flipped');
-      }
-    });
-
-    socket.on('unflip-card', ({ index }) => {
+    function handleUnflipCard({ index }) {
       gameState.tempFlipped = gameState.tempFlipped.filter(i => i !== index);
-      const card = document.querySelector(`[data-index="${index}"]`);
-      if (card) card.classList.remove('flipped');
-    });
+      renderCards();
+    }
 
-    socket.on('mobile-connected', () => {
-      document.getElementById('connectionStatus').textContent = 'Connected to game!';
-      document.getElementById('connectionStatus').className = 'connection-status connected';
-    });
-
-    socket.on('session-not-found', () => {
-      document.getElementById('connectionStatus').textContent = 'Game session not found';
-      document.getElementById('connectionStatus').className = 'connection-status error';
-    });
-
-    socket.on('connect', () => {
-      if (sessionId) {
-        socket.emit('mobile-connect', { sessionId: sessionId });
-      }
-    });
-
-    socket.on('disconnect', () => {
-      document.getElementById('connectionStatus').textContent = 'Disconnected from game';
-      document.getElementById('connectionStatus').className = 'connection-status disconnected';
-    });
+    function updateConnectionStatus(message, status) {
+      connectionStatus.textContent = message;
+      connectionStatus.className = `connection-status ${status}`;
+    }
   </script>
 </body>
 </html>
